@@ -1,5 +1,5 @@
 from math import pi, cos, sin, sqrt, atan2
-WHEELS_SPACING = 47
+WHEELS_SPACING = 48
 
 def update_pos(current_pos, speed_left, speed_right, dt):
     x, y, theta = current_pos

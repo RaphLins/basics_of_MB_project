@@ -2,7 +2,7 @@ from math import pi, cos, sin, sqrt, atan2
 
 thymio_speed_to_mms = 0.4
 mms_to_thymio_speed = 1/thymio_speed_to_mms
-WHEELS_SPACING = 47
+WHEELS_SPACING = 48
 
 def normalize_angle(angle):
     new_angle = angle
@@ -26,12 +26,14 @@ def controller(current_pos, target_pos):
     if gamma == 0:
         gamma = 0.0001
 
-    k1 = 0.2  # affects linear speed
-    k2 = 4 # affects rotational speed
+    k1 = 1  # affects linear speed
+    k2 = 8 # affects rotational speed
     k3 = 0  # affects how much getting to the final angle matters
 
     v = k1 * rho * cos(gamma)
     omega = k2 * gamma + k1 * sin(gamma) * cos(gamma) / gamma * (gamma + k3 * delta)
+
+    v = min(100, max(-100, v))
 
     speed_left = (v - WHEELS_SPACING * omega / 2)
     speed_right = (v + WHEELS_SPACING * omega / 2)

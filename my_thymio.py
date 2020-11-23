@@ -12,8 +12,10 @@ class MyThymio(Thymio):
     def set_speed(self, left, right):
         left = round(left)
         right = round(right)
-        left = min(255, max(-255, left))
-        right = min(255, max(-255, right))
+        MAX_SPEED = 200
+
+        left = min(MAX_SPEED, max(-MAX_SPEED, left))
+        right = min(MAX_SPEED, max(-MAX_SPEED, right))
 
         if left >= 0:
             self.set_var("motor.left.target", left)

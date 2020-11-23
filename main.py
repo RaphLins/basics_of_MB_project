@@ -21,17 +21,17 @@ REFRESH_RATE = 0.05
 th = MyThymio(port="COM3", refreshing_rate=REFRESH_RATE)
 time.sleep(1)
 
-def draw_thymio(thymio_position, offset, ax):
+def draw_thymio(thymio_position, ax):
     x, y, theta = thymio_position
-    x_off, y_off = offset
-    x += x_off
-    x_off, y_off = offset
-    y += y_off
     l = 60
-
     ax.scatter(x, y, c='b')
     ax.plot((x, x + l * cos(theta)), (y, y + l * sin(theta)), 'b')
     plt.pause(0.02)
+
+def distance(point1, point2):
+    x1, y1, theta1 = point1
+    x2, y2, theta2 = point2
+    return sqrt((x1-x2)**2 + (y1-y2)**2)
 
 # plotting
 matplotlib.use("TkAgg")
@@ -57,10 +57,13 @@ thymio_speed_to_mms = 0.4
 mms_to_thymio_speed = 1/thymio_speed_to_mms
 
 
-target_pos = (500, 0, 0)
 
-theta = pi/2
+theta = 0
 current_pos = (0, 0, theta)
+
+way_points_list = [(210, 0, 0), (210, 148.5, 0), (0, 148.5, 0), (0, 0, 0)]
+target_pos = way_points_list[0]
+point_idx = 0;
 
 state = GLOBAL_PATHING
 
@@ -78,12 +81,24 @@ while True:
         #     stop = True
 
         map_ax.clear()
-        map_ax.set_xlim(-1000, 1000)
-        map_ax.set_ylim(-1000, 1000)
-        draw_thymio(current_pos, (20, 20), map_ax)
+        map_ax.set_xlim(-50, 300)
+        map_ax.set_ylim(-50, 300)
+        for point in way_points_list:
+            x, y, theta = point
+            map_ax.scatter(x, y, c='r')
+        x, y, theta = target_pos
+        map_ax.scatter(x, y, c='g')
+        draw_thymio(current_pos, map_ax)
 
         if state == GLOBAL_PATHING:
             # print("Global pathing")
+            if distance(current_pos, target_pos) < 10:
+                point_idx += 1
+                if point_idx == len(way_points_list):
+                    point_idx = 0
+                target_pos = way_points_list[point_idx]
+
+
             speed_left, speed_right = controller(current_pos, target_pos)
 
             if stop:
