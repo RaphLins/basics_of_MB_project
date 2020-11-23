@@ -33,6 +33,11 @@ def distance(point1, point2):
     x2, y2, theta2 = point2
     return sqrt((x1-x2)**2 + (y1-y2)**2)
 
+def draw_particles(particles, ax):
+    for particle in particles:
+        x, y, theta = particle
+        ax.scatter(x, y, c='g')
+
 # plotting
 matplotlib.use("TkAgg")
 plt.ion()
@@ -56,14 +61,18 @@ plt.show()
 thymio_speed_to_mms = 0.4
 mms_to_thymio_speed = 1/thymio_speed_to_mms
 
+NUMBER_OF_PARTICLES = 10
 
+particles = []
+for i in range(NUMBER_OF_PARTICLES):
+    particles.append((0, 0, 0))
 
 theta = 0
 current_pos = (0, 0, theta)
 
 way_points_list = [(210, 0, 0), (210, 148.5, 0), (0, 148.5, 0), (0, 0, 0)]
 target_pos = way_points_list[0]
-point_idx = 0;
+point_idx = 0
 
 state = GLOBAL_PATHING
 
@@ -73,12 +82,13 @@ while True:
 
     if current_time - last_update > REFRESH_RATE:
         speed_left, speed_right = th.measure_speeds()
-        current_pos = update_pos(current_pos, speed_left*thymio_speed_to_mms, speed_right*thymio_speed_to_mms, REFRESH_RATE)
+        current_pos, particles = update_particles(current_pos, particles, speed_left*thymio_speed_to_mms, speed_right*thymio_speed_to_mms, REFRESH_RATE)
 
         # if current_pos[0] >=100:
         #     stop = True
         # if current_pos[2] >=pi:
         #     stop = True
+
 
         map_ax.clear()
         map_ax.set_xlim(-50, 300)
@@ -88,6 +98,7 @@ while True:
             map_ax.scatter(x, y, c='r')
         x, y, theta = target_pos
         map_ax.scatter(x, y, c='g')
+        draw_particles(particles, map_ax)
         draw_thymio(current_pos, map_ax)
 
         if state == GLOBAL_PATHING:
