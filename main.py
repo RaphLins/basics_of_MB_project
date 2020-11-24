@@ -6,6 +6,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 from math import pi, cos, sin, sqrt, atan2
+import cv2
 
 from matplotlib.widgets import Button
 
@@ -13,6 +14,10 @@ from filter import *
 from control import *
 from vision import *
 from my_thymio import MyThymio
+
+pattern = cv2.imread('images/pattern.png')
+pattern = cv2.cvtColor(pattern, cv2.COLOR_BGR2GRAY)
+pattern = cv2.resize(pattern, dsize=(420, 297), interpolation=cv2.INTER_CUBIC)
 
 GLOBAL_PATHING = 0
 LOCAL_AVOIDANCE = 1
@@ -63,14 +68,18 @@ mms_to_thymio_speed = 1/thymio_speed_to_mms
 
 NUMBER_OF_PARTICLES = 10
 
-particles = []
-for i in range(NUMBER_OF_PARTICLES):
-    particles.append((0, 0, 0))
 
-theta = 0
-current_pos = (0, 0, theta)
 
 way_points_list = [(210, 0, 0), (210, 148.5, 0), (0, 148.5, 0), (0, 0, 0)]
+way_points_list = [(x[0] + 111, x[1] + 73, x[2]) for x in way_points_list]
+
+current_pos = way_points_list[-1]
+
+
+particles = []
+for i in range(NUMBER_OF_PARTICLES):
+    particles.append(current_pos)
+
 target_pos = way_points_list[0]
 point_idx = 0
 
@@ -91,8 +100,9 @@ while True:
 
 
         map_ax.clear()
-        map_ax.set_xlim(-50, 300)
-        map_ax.set_ylim(-50, 300)
+        map_ax.imshow(1 - pattern, cmap='Greys', origin='lower')
+        map_ax.set_xlim(-50, 500)
+        map_ax.set_ylim(-50, 400)
         for point in way_points_list:
             x, y, theta = point
             map_ax.scatter(x, y, c='r')
