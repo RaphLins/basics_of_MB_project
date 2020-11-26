@@ -2,6 +2,10 @@ from math import pi, cos, sin, sqrt, atan2
 import numpy as np
 import cv2
 
+class Particle:
+    def __init__(self, position):
+        self.pos = position
+
 pattern = cv2.imread('images/pattern.png')
 pattern = cv2.cvtColor(pattern, cv2.COLOR_BGR2GRAY)
 pattern = cv2.resize(pattern, dsize=(420, 297), interpolation=cv2.INTER_CUBIC)
@@ -39,7 +43,7 @@ def sample_pattern_ground_sensors(thymio_pos):
 
 def ground_measurement_probability(thymio_pos, ground_left_measure, ground_right_measure):
     ground_left_val, ground_right_val = sample_pattern_ground_sensors(thymio_pos)
-    print("pattern:", ground_left_val, ground_right_val, "measured:", ground_left_measure, ground_right_measure)
+    # print("pattern:", ground_left_val, ground_right_val, "measured:", ground_left_measure, ground_right_measure)
     if ground_left_val == ground_left_measure:
         prob_left = 0.8
     else:
@@ -62,15 +66,32 @@ def update_pos(current_pos, speed_left, speed_right, dt):
 
     return x, y, theta
 
+def draw_particle(particles, weights):
+
+    return None
+
 def update_particles(current_pos, particles, speed_left_m, speed_right_m, ground_left_measure, ground_right_measure, dt):
     prob = ground_measurement_probability(current_pos, ground_left_measure, ground_right_measure)
-    new_particles = []
-    for particle in particles:
-        sigma = 20
-        speed_left = np.random.normal(speed_left_m, sigma)
-        speed_right = np.random.normal(speed_right_m, sigma)
-        particle = update_pos(particle, speed_left, speed_right, dt)
-        new_particles.append(particle)
 
-    current_pos = update_pos(current_pos, speed_left_m, speed_right_m, dt)
-    return current_pos, new_particles
+    M = len(particles)
+    NEW_GEN_NUMBER = 20
+    sigma = 10
+
+    weights = np.empty([len(particles)*NEW_GEN_NUMBER])
+
+    new_generation = []
+    i = 0
+    for particle in particles:
+        for j in range(NEW_GEN_NUMBER):
+            speed_left = np.random.normal(speed_left_m, sigma)
+            speed_right = np.random.normal(speed_right_m, sigma)
+            new_pos = update_pos(particle.pos, speed_left, speed_right, dt)
+            new_particle = Particle(new_pos)
+            new_generation.append(new_particle)
+            weights[i] = ground_measurement_probability(new_particle.pos, ground_left_measure, ground_right_measure)
+            i+=1
+
+    # resample
+    new_particles = np.random.choice(new_generation, size=M, replace=True, p=weights/np.sum(weights))
+
+    return new_particles

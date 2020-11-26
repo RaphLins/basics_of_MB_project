@@ -27,7 +27,7 @@ def controller(current_pos, target_pos):
         gamma = 0.0001
 
     k1 = 3  # affects linear speed
-    k2 = 3 # affects rotational speed
+    k2 = 2 # affects rotational speed
     k3 = 0  # affects how much getting to the final angle matters
 
     v = k1 * rho * cos(gamma)

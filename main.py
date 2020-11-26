@@ -21,7 +21,7 @@ LOCAL_AVOIDANCE = 1
 Ts = 0.1
 thymio_speed_to_mms = 0.36
 mms_to_thymio_speed = 1/thymio_speed_to_mms
-NUMBER_OF_PARTICLES = 20
+NUMBER_OF_PARTICLES = 100
 DISP_REFRESH_RATE = 0.3
 
 th = MyThymio(port="COM3", refreshing_rate=2 * Ts)
@@ -30,7 +30,7 @@ time.sleep(1)
 def draw_thymio(thymio_pos, ax):
     x, y, theta = thymio_pos
     ground_left, ground_right = get_ground_sensor_pos(thymio_pos)
-    l = 60
+    l = 30
     ax.scatter(x, y, c='b')
     ax.scatter(ground_left[0], ground_left[1], c='r')
     ax.scatter(ground_right[0], ground_right[1], c='r')
@@ -38,8 +38,8 @@ def draw_thymio(thymio_pos, ax):
 
 def draw_particles(particles, ax):
     for particle in particles:
-        x, y, theta = particle
-        ax.scatter(x, y, c='g')
+        x, y, theta = particle.pos
+        ax.scatter(x, y, c='m')
 
 def distance(point1, point2):
     x1, y1, theta1 = point1
@@ -52,7 +52,7 @@ map_fig = plt.figure()
 map_ax = map_fig.add_subplot(111)
 plt.subplots_adjust(bottom=0.2)
 ctrl_ax = plt.axes([0.7, 0.05, 0.1, 0.075])
-stop = True
+stop = False
 stop_btn = Button(ctrl_ax, 'Stop')
 def stop_loop(event):
     global stop
@@ -72,7 +72,10 @@ current_pos = path[-1]
 
 particles = []
 for i in range(NUMBER_OF_PARTICLES):
-    particles.append(current_pos)
+    particles.append(Particle(current_pos))
+# for i in range(int(sqrt(NUMBER_OF_PARTICLES))):
+#     for j in range(int(sqrt(NUMBER_OF_PARTICLES))):
+#         particles.append(Particle((111+i*10, 73+j*10, 0)))
 
 target_pos = path[0]
 point_idx = 0
@@ -92,8 +95,9 @@ while True:
         ground_left_measure, ground_right_measure = th.measure_ground_sensors()
 
         # position estimation
-        current_pos, particles = update_particles(current_pos, particles, speed_left * thymio_speed_to_mms, speed_right * thymio_speed_to_mms, ground_left_measure, ground_right_measure, dt)
-
+        particles = update_particles(current_pos, particles, speed_left * thymio_speed_to_mms, speed_right * thymio_speed_to_mms, ground_left_measure, ground_right_measure, dt)
+        n = len(particles)
+        current_pos = (sum(p.pos[0] for p in particles)/n, sum(p.pos[1] for p in particles)/n, sum(p.pos[2] for p in particles)/n)
 
         # if current_pos[0] >=path[0][0]:
         #     stop = True
@@ -102,7 +106,7 @@ while True:
 
         if state == GLOBAL_PATHING:
             # print("Global pathing")
-            if distance(current_pos, target_pos) < 20:
+            if distance(current_pos, target_pos) < 15:
                 point_idx += 1
                 if point_idx == len(path):
                     point_idx = 0
@@ -120,7 +124,6 @@ while True:
         elif state == LOCAL_AVOIDANCE:
             print("Local avoidance")
 
-    # plot
     current_time = time.time()
     if current_time - last_display_update > DISP_REFRESH_RATE:
         last_display_update = current_time
