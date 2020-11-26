@@ -1,5 +1,7 @@
 from Thymio import Thymio, Message
 
+GROUND_THRESHOLD = 500
+
 class MyThymio(Thymio):
     def __init__(self, port="COM3", refreshing_rate=0.1):
         import serial  # pip3 install pyserial
@@ -36,4 +38,15 @@ class MyThymio(Thymio):
         if speed_right > 2 ** 16/2:
             speed_right -= 2 ** 16
 
+        if abs(speed_left) < 7:
+            speed_left = 0
+        if abs(speed_right) < 7:
+            speed_right = 0
+
         return speed_left, speed_right
+
+    def measure_ground_sensors(self):
+        ground_left_measure = self["prox.ground.delta"][0]
+        ground_right_measure = self["prox.ground.delta"][1]
+        #white = 1000, black = 200
+        return ground_left_measure > GROUND_THRESHOLD, ground_right_measure > GROUND_THRESHOLD
