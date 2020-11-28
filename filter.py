@@ -13,7 +13,7 @@ pattern = cv2.resize(pattern, dsize=(420, 297), interpolation=cv2.INTER_CUBIC)
 
 WHEELS_SPACING = 50
 SENSOR_FORWARD_OFFSET = 50
-SENSOR_PERP_OFFSET = 20
+SENSOR_PERP_OFFSET = 10
 
 def sample_pattern(x, y):
     x = int(round(x))
