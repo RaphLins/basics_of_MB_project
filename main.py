@@ -7,7 +7,7 @@ matplotlib.use("TkAgg")
 import matplotlib.pyplot as plt
 import numpy as np
 from math import pi, cos, sin, sqrt, atan2
-
+sys.path.insert(0, os.path.join(os.getcwd(), 'src'))
 from matplotlib.widgets import Button
 
 from filter import *
@@ -65,10 +65,10 @@ map_ax.set_ylim(-50, 400)
 plt.draw()
 plt.show(block=False)
 
-path = [(210, 0, 0), (210, 148.5, 0), (0, 148.5, 0), (0, 0, 0)]
-path = [(x[0] + 111, x[1] + 73, x[2]) for x in path]
+# path = [(210, 0, 0), (210, 148.5, 0), (0, 148.5, 0), (0, 0, 0)]
+# path = [(x[0] + 111, x[1] + 73, x[2]) for x in path]
 
-current_pos = path[-1]
+current_pos = path[0]
 
 particles = []
 for i in range(NUMBER_OF_PARTICLES):
@@ -77,8 +77,8 @@ for i in range(NUMBER_OF_PARTICLES):
 #     for j in range(int(sqrt(NUMBER_OF_PARTICLES))):
 #         particles.append(Particle((111+i*10, 73+j*10, 0)))
 
-target_pos = path[0]
-point_idx = 0
+path_idx = 1
+target_pos = path[path_idx]
 
 state = GLOBAL_PATHING
 
@@ -87,7 +87,7 @@ last_display_update = time.time()
 while True:
     current_time = time.time()
     if current_time - last_update > Ts:
-        print(current_time - last_update)
+        # print(current_time - last_update)
         dt = current_time - last_update
         last_update = current_time
         # measurements
@@ -107,10 +107,11 @@ while True:
         if state == GLOBAL_PATHING:
             # print("Global pathing")
             if distance(current_pos, target_pos) < 15:
-                point_idx += 1
-                if point_idx == len(path):
-                    point_idx = 0
-                target_pos = path[point_idx]
+                path_idx += 1
+                if path_idx == len(path):
+                    stop = True
+                else:
+                    target_pos = path[path_idx]
 
 
             speed_left, speed_right = controller(current_pos, target_pos)
@@ -128,9 +129,9 @@ while True:
     if current_time - last_display_update > DISP_REFRESH_RATE:
         last_display_update = current_time
         map_ax.clear()
-        map_ax.imshow(1 - pattern, cmap='Greys', origin='lower')
-        map_ax.set_xlim(-50, 500)
-        map_ax.set_ylim(-50, 400)
+        map_ax.imshow(obstacle_map, cmap='Greys', origin='lower')
+        map_ax.set_xlim(-100, 900)
+        map_ax.set_ylim(0, 700)
         for point in path:
             x, y, theta = point
             map_ax.scatter(x, y, c='r')
@@ -140,3 +141,6 @@ while True:
         draw_thymio(current_pos, map_ax)
         plt.draw()
         plt.pause(0.001)
+    if stop:
+        th.set_speed(0, 0)
+        break
