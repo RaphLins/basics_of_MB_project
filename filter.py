@@ -6,7 +6,7 @@ class Particle:
     def __init__(self, position):
         self.pos = position
 
-pattern = cv2.imread('images/pattern.png')
+pattern = 1 -cv2.imread('images/pattern.png')
 pattern = cv2.cvtColor(pattern, cv2.COLOR_BGR2GRAY)
 pattern = cv2.resize(pattern, dsize=(420, 297), interpolation=cv2.INTER_CUBIC)
 
@@ -39,7 +39,7 @@ def sample_pattern_ground_sensors(thymio_pos):
     ground_left_val = sample_pattern(ground_left[0], ground_left[1])
     ground_right_val = sample_pattern(ground_right[0], ground_right[1])
     #white = 255, black = 0
-    return ground_left_val > 100, ground_right_val > 100
+    return ground_left_val < 100, ground_right_val < 100
 
 def ground_measurement_probability(thymio_pos, ground_left_measure, ground_right_measure):
     ground_left_val, ground_right_val = sample_pattern_ground_sensors(thymio_pos)
@@ -74,7 +74,7 @@ def update_particles(current_pos, particles, speed_left_m, speed_right_m, ground
     prob = ground_measurement_probability(current_pos, ground_left_measure, ground_right_measure)
 
     M = len(particles)
-    NEW_GEN_NUMBER = 20
+    NEW_GEN_NUMBER = 50
     sigma = 10
 
     weights = np.empty([len(particles)*NEW_GEN_NUMBER])

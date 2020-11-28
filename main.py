@@ -21,7 +21,7 @@ LOCAL_AVOIDANCE = 1
 Ts = 0.1
 thymio_speed_to_mms = 0.36
 mms_to_thymio_speed = 1/thymio_speed_to_mms
-NUMBER_OF_PARTICLES = 100
+NUMBER_OF_PARTICLES = 70
 DISP_REFRESH_RATE = 0.3
 
 th = MyThymio(port="COM3", refreshing_rate=2 * Ts)
@@ -59,14 +59,20 @@ def stop_loop(event):
     stop = not stop
     print(stop)
 stop_btn.on_clicked(stop_loop)
-map_ax.imshow(1 - pattern, cmap='Greys', origin='lower')
+map_ax.imshow(pattern, cmap='Greys', origin='lower')
 map_ax.set_xlim(-50, 500)
 map_ax.set_ylim(-50, 400)
 plt.draw()
 plt.show(block=False)
 
-# path = [(210, 0, 0), (210, 148.5, 0), (0, 148.5, 0), (0, 0, 0)]
-# path = [(x[0] + 111, x[1] + 73, x[2]) for x in path]
+LOOP = False
+if 'path' not in locals():
+    path = [(0, 0, 0), (210, 0, 0), (210, 148.5, 0), (0, 148.5, 0)]
+    path = [(x[0] + 111, x[1] + 73, x[2]) for x in path]
+    LOOP = True
+
+if 'obstacle_map' not in locals():
+    obstacle_map = pattern
 
 current_pos = path[0]
 
@@ -109,7 +115,11 @@ while True:
             if distance(current_pos, target_pos) < 15:
                 path_idx += 1
                 if path_idx == len(path):
-                    stop = True
+                    if LOOP:
+                        path_idx = 0
+                        target_pos = path[path_idx]
+                    else:
+                        stop = True
                 else:
                     target_pos = path[path_idx]
 
