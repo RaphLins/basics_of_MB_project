@@ -3,9 +3,9 @@
 
 import threading
 
+
 class Message:
-    """Aseba message data.
-    """
+    """Aseba message data."""
 
     # v5
     ID_BOOTLOADER_RESET = 0x8000
@@ -20,30 +20,30 @@ class Message:
     ID_LOCAL_EVENT_DESCRIPTION = 0x9002
     ID_NATIVE_FUNCTION_DESCRIPTION = 0x9003
     ID_VARIABLES = 0x9005
-    ID_EXECUTION_STATE_CHANGED = 0x900a
-    ID_NODE_PRESENT = 0x900c
-    ID_GET_DESCRIPTION = 0xa000
-    ID_SET_BYTECODE = 0xa001
-    ID_RESET = 0xa002
-    ID_RUN = 0xa003
-    ID_PAUSE = 0xa004
-    ID_STEP = 0xa005
-    ID_STOP = 0xa006
-    ID_GET_EXECUTION_STATE = 0xa007
-    ID_BREAKPOINT_SET = 0xa008
-    ID_BREAKPOINT_CLEAR = 0xa009
-    ID_BREAKPOINT_CLEAR_ALL = 0xa00a
-    ID_GET_VARIABLES = 0xa00b
-    ID_SET_VARIABLES =  0xa00c
-    ID_GET_NODE_DESCRIPTION = 0xa010
-    ID_LIST_NODES = 0xa011
+    ID_EXECUTION_STATE_CHANGED = 0x900A
+    ID_NODE_PRESENT = 0x900C
+    ID_GET_DESCRIPTION = 0xA000
+    ID_SET_BYTECODE = 0xA001
+    ID_RESET = 0xA002
+    ID_RUN = 0xA003
+    ID_PAUSE = 0xA004
+    ID_STEP = 0xA005
+    ID_STOP = 0xA006
+    ID_GET_EXECUTION_STATE = 0xA007
+    ID_BREAKPOINT_SET = 0xA008
+    ID_BREAKPOINT_CLEAR = 0xA009
+    ID_BREAKPOINT_CLEAR_ALL = 0xA00A
+    ID_GET_VARIABLES = 0xA00B
+    ID_SET_VARIABLES = 0xA00C
+    ID_GET_NODE_DESCRIPTION = 0xA010
+    ID_LIST_NODES = 0xA011
     # v6
-    ID_GET_DEVICE_INFO = 0xa012
-    ID_SET_DEVICE_INFO = 0xa013
+    ID_GET_DEVICE_INFO = 0xA012
+    ID_SET_DEVICE_INFO = 0xA013
     # v7
-    ID_GET_CHANGED_VARIABLES = 0xa014
+    ID_GET_CHANGED_VARIABLES = 0xA014
     # v8
-    ID_GET_NODE_DESCRIPTION_FRAGMENT = 0xa015
+    ID_GET_NODE_DESCRIPTION_FRAGMENT = 0xA015
 
     PROTOCOL_VERSION = 5
 
@@ -53,35 +53,30 @@ class Message:
         self.payload = payload
 
     def get_uint16(self, offset):
-        """Get an unsigned 16-bit integer in the payload.
-        """
+        """Get an unsigned 16-bit integer in the payload."""
         return self.payload[offset] + 256 * self.payload[offset + 1], offset + 2
 
     def get_string(self, offset):
-        """Get a string in the payload.
-        """
+        """Get a string in the payload."""
         len = self.payload[offset]
         str = self.payload[offset + 1 : offset + 1 + len]
-        return str.decode('utf-8'), offset + 1 + len
+        return str.decode("utf-8"), offset + 1 + len
 
     @staticmethod
     def uint16_to_bytes(word):
-        """Convert an unsigned 16-bit integer to bytes.
-        """
+        """Convert an unsigned 16-bit integer to bytes."""
         return bytes([word % 256, word // 256])
 
     @staticmethod
     def uint16array_to_bytes(a):
-        """Convert an array of unsigned 16-bit integer to bytes.
-        """
-        bytes = b"";
+        """Convert an array of unsigned 16-bit integer to bytes."""
+        bytes = b""
         for word in a:
             bytes += Message.uint16_to_bytes(word)
         return bytes
 
     def decode(self):
-        """Decode message properties from its payload.
-        """
+        """Decode message properties from its payload."""
         if self.id == Message.ID_DESCRIPTION:
             self.node_name, offset = self.get_string(0)
             self.protocol_version, offset = self.get_uint16(offset)
@@ -121,19 +116,20 @@ class Message:
             self.bc_offset, offset = self.get_uint16(offset)
             val = []
             for i in range(4, len(self.payload), 2):
-                instr, offset = get_uint16(offset)
+                instr, offset = self.get_uint16(offset)
                 val.append(instr)
             self.bc = val
-        elif (self.id == Message.ID_BREAKPOINT_CLEAR_ALL or
-              self.id == Message.ID_RESET or
-              self.id == Message.ID_RUN or
-              self.id == Message.ID_PAUSE or
-              self.id == Message.ID_STEP or
-              self.id == Message.ID_STOP or
-              self.id == Message.ID_GET_EXECUTION_STATE):
+        elif (
+            self.id == Message.ID_BREAKPOINT_CLEAR_ALL
+            or self.id == Message.ID_RESET
+            or self.id == Message.ID_RUN
+            or self.id == Message.ID_PAUSE
+            or self.id == Message.ID_STEP
+            or self.id == Message.ID_STOP
+            or self.id == Message.ID_GET_EXECUTION_STATE
+        ):
             self.target_node_id, offset = self.get_uint16(0)
-        elif (self.id == Message.ID_BREAKPOINT_SET or
-              self.id == Message.ID_BREAKPOINT_CLEAR):
+        elif self.id == Message.ID_BREAKPOINT_SET or self.id == Message.ID_BREAKPOINT_CLEAR:
             self.target_node_id, offset = self.get_uint16(0)
             self.pc, offset = self.get_uint16(offset)
         elif self.id == Message.ID_GET_VARIABLES:
@@ -145,24 +141,24 @@ class Message:
             self.var_offset, offset = self.get_uint16(offset)
             val = []
             for i in range(4, len(self.payload), 2):
-                v, offset = get_uint16(offset)
+                v, offset = self.get_uint16(offset)
                 val.append(v)
             self.var_val = val
         elif self.id == Message.ID_LIST_NODES:
             self.version, offset = self.get_uint16(0)
 
     def serialize(self):
-        """Serialize message to bytes.
-        """
-        return (self.uint16_to_bytes(len(self.payload)) +
-                self.uint16_to_bytes(self.source_node) +
-                self.uint16_to_bytes(self.id) +
-                self.payload)
+        """Serialize message to bytes."""
+        return (
+            self.uint16_to_bytes(len(self.payload))
+            + self.uint16_to_bytes(self.source_node)
+            + self.uint16_to_bytes(self.id)
+            + self.payload
+        )
 
     @staticmethod
     def id_to_str(id):
-        """Convert message id to its name string.
-        """
+        """Convert message id to its name string."""
         try:
             return {
                 Message.ID_DESCRIPTION: "DESCRIPTION",
@@ -188,7 +184,7 @@ class Message:
                 Message.ID_GET_NODE_DESCRIPTION: "ID_GET_NODE_DESCRIPTION",
                 Message.ID_LIST_NODES: "ID_LIST_NODES",
             }[id]
-        except KeyError as error:
+        except KeyError:
             return f"ID {id}"
 
     def __str__(self):
@@ -222,8 +218,7 @@ class Message:
 
 
 class InputThread(threading.Thread):
-    """Thread which reads messages asynchronously.
-    """
+    """Thread which reads messages asynchronously."""
 
     def __init__(self, io, handle_msg=None):
         threading.Thread.__init__(self)
@@ -231,27 +226,24 @@ class InputThread(threading.Thread):
         self.handle_msg = handle_msg
 
     def read_uint16(self):
-        """Read an unsigned 16-bit number.
-        """
+        """Read an unsigned 16-bit number."""
         b = self.io.read(2)
         return b[0] + 256 * b[1]
 
     def read_message(self):
-        """Read a complete message.
-        """
+        """Read a complete message."""
         try:
             payload_len = self.read_uint16()
             source_node = self.read_uint16()
             id = self.read_uint16()
             payload = self.io.read(payload_len)
-        except:
+        except Exception:
             return None
         msg = Message(id, source_node, payload)
         return msg
 
     def run(self):
-        """Input thread code.
-        """
+        """Input thread code."""
         while True:
             msg = self.read_message()
             if msg:
@@ -263,8 +255,7 @@ class InputThread(threading.Thread):
 
 
 class RemoteNode:
-    """Remote node description and state.
-    """
+    """Remote node description and state."""
 
     def __init__(self):
         self.node_id = None
@@ -275,48 +266,40 @@ class RemoteNode:
         self.var_data = []
 
     def add_var(self, name, size):
-        """Add the definition of a variable.
-        """
+        """Add the definition of a variable."""
         self.var_offset[name] = self.var_total_size
         self.var_size[name] = size
         self.var_total_size += size
 
     def reset_var_data(self):
-        """Reset the variable data to 0.
-        """
+        """Reset the variable data to 0."""
         self.var_data = [0 for i in range(self.var_total_size)]
 
     def get_var(self, name, index=0):
-        """Get the value of a scalar variable or an item in an array variable.
-        """
+        """Get the value of a scalar variable or an item in an array variable."""
         return self.var_data[self.var_offset[name] + index]
 
     def get_var_array(self, name):
-        """Get the value of an array variable.
-        """
+        """Get the value of an array variable."""
         offset = self.var_offset[name]
         return self.var_data[offset : offset + self.var_size[name]]
 
     def set_var(self, name, val, index=0):
-        """Set the value of a scalar variable or an item in an array variable.
-        """
+        """Set the value of a scalar variable or an item in an array variable."""
         self.var_data[self.var_offset[name] + index] = val
 
     def set_var_array(self, name, val):
-        """Set the value of an array variable.
-        """
+        """Set the value of an array variable."""
         offset = self.var_offset[name]
         self.var_data[offset : offset + len(val)] = val
 
     def set_var_data(self, offset, data):
-        """Set values in the variable data array.
-        """
+        """Set values in the variable data array."""
         self.var_data[offset : offset + len(data)] = data
 
 
 class Thymio:
-    """Connection to a Thymio.
-    """
+    """Connection to a Thymio."""
 
     def __init__(self, io, node_id=1, refreshing_rate=None):
         self.terminating = False
@@ -326,26 +309,26 @@ class Thymio:
         self.auto_handshake = False
 
         self.input_lock = threading.Lock()
-        self.input_thread = InputThread(self.io,
-                                        lambda msg: self.handle_message(msg))
+        self.input_thread = InputThread(self.io, lambda msg: self.handle_message(msg))
         self.input_thread.start()
 
         self.output_lock = threading.Lock()
         self.refreshing_timeout = None
         self.refreshing_trigger = threading.Event()  # initially wait() blocks
+
         def do_refresh():
             while not self.terminating:
                 self.refreshing_trigger.wait(self.refreshing_timeout)
                 self.refreshing_trigger.clear()
                 self.get_variables()
+
         self.refresh_thread = threading.Thread(target=do_refresh)
         self.refresh_thread.start()
         if refreshing_rate is not None:
             self.set_refreshing_rate(refreshing_rate)
 
     def close(self):
-        """Close connection.
-        """
+        """Close connection."""
         self.io.close()
 
     def __del__(self):
@@ -360,30 +343,22 @@ class Thymio:
 
     @staticmethod
     def serial_default_port():
-        """Get the name of the default Thymio serial port for the current platform.
-        """
+        """Get the name of the default Thymio serial port for the current platform."""
         import sys
         import os
+
         if sys.platform == "linux":
-            return [
-                "/dev/" + filename
-                for filename in os.listdir("/dev")
-                if filename.startswith("ttyACM")
-            ][0]
+            return ["/dev/" + filename for filename in os.listdir("/dev") if filename.startswith("ttyACM")][0]
         if sys.platform == "darwin":
-            return [
-                "/dev/" + filename
-                for filename in os.listdir("/dev")
-                if filename.startswith("cu.usb")
-            ][0]
+            return ["/dev/" + filename for filename in os.listdir("/dev") if filename.startswith("cu.usb")][0]
         if sys.platform == "win32":
             return "COM8"
 
     @staticmethod
     def serial(port=None, node_id=1, refreshing_rate=None):
-        """Create Thymio object with a serial connection.
-        """
+        """Create Thymio object with a serial connection."""
         import serial  # pip3 install pyserial
+
         if port is None:
             port = Thymio.serial_default_port()
         th = Thymio(serial.Serial(port), node_id, refreshing_rate)
@@ -392,9 +367,9 @@ class Thymio:
 
     @staticmethod
     def tcp(host="127.0.0.1", port=3000, node_id=1, refreshing_rate=None):
-        """Create Thymio object with a TCP connection.
-        """
+        """Create Thymio object with a TCP connection."""
         import socket
+
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect((host, port))
         th = Thymio(s, node_id, refreshing_rate)
@@ -403,14 +378,16 @@ class Thymio:
 
     @staticmethod
     def null(node_id=1, refreshing_rate=None):
-        """Create Thymio object without connection.
-        """
+        """Create Thymio object without connection."""
         import io
+
         class NullIO(io.RawIOBase):
             def read(self, n):
                 return None
+
             def write(self, b):
                 pass
+
         return Thymio(NullIO(), node_id)
 
     def handshake(self):
@@ -418,16 +395,14 @@ class Thymio:
         self.list_nodes()
 
     def set_refreshing_rate(self, rate):
-        """Change the auto-refresh rate to update variables.
-        """
+        """Change the auto-refresh rate to update variables."""
         self.refreshing_timeout = rate
         if rate is not None:
             # refresh now
             self.refreshing_trigger.set()
 
     def handle_message(self, msg):
-        """Handle an input message.
-        """
+        """Handle an input message."""
         if msg.id == Message.ID_NODE_PRESENT:
             with self.input_lock:
                 self.remote_node.node_id = msg.source_node
@@ -450,99 +425,82 @@ class Thymio:
             print(msg)
 
     def send(self, msg):
-        """Send a message.
-        """
+        """Send a message."""
         with self.output_lock:
             self.io.write(msg.serialize())
 
     def get_target_node_id(self):
-        """Get target node ID.
-        """
+        """Get target node ID."""
         with self.input_lock:
             return self.remote_node.node_id
 
     def get_target_node_var_total_size(self):
-        """Get the total size of variables.
-        """
+        """Get the total size of variables."""
         with self.input_lock:
             return self.remote_node.var_total_size
 
     def list_nodes(self):
-        """Send a LIST_NODES message.
-        """
+        """Send a LIST_NODES message."""
         payload = Message.uint16array_to_bytes([Message.PROTOCOL_VERSION])
         msg = Message(Message.ID_LIST_NODES, self.node_id, payload)
         self.send(msg)
 
     def get_node_description(self, target_node_id=None):
-        """Send a GET_NODE_DESCRIPTION message.
-        """
-        payload = Message.uint16array_to_bytes([
-            self.get_target_node_id() if target_node_id is None else target_node_id,
-            Message.PROTOCOL_VERSION
-        ])
+        """Send a GET_NODE_DESCRIPTION message."""
+        payload = Message.uint16array_to_bytes(
+            [self.get_target_node_id() if target_node_id is None else target_node_id, Message.PROTOCOL_VERSION]
+        )
         msg = Message(Message.ID_GET_NODE_DESCRIPTION, self.node_id, payload)
         self.send(msg)
 
     def get_variables(self, chunk_offset=0, chunk_length=None, target_node_id=None):
-        """Send a GET_VARIABLES message.
-        """
+        """Send a GET_VARIABLES message."""
         if target_node_id is None:
             target_node_id = self.get_target_node_id()
         if target_node_id is not None:
-            payload = Message.uint16array_to_bytes([
-                self.get_target_node_id() if target_node_id is None else target_node_id,
-                chunk_offset,
-                self.get_target_node_var_total_size() if chunk_length is None else chunk_length
-            ])
+            payload = Message.uint16array_to_bytes(
+                [
+                    self.get_target_node_id() if target_node_id is None else target_node_id,
+                    chunk_offset,
+                    self.get_target_node_var_total_size() if chunk_length is None else chunk_length,
+                ]
+            )
             msg = Message(Message.ID_GET_VARIABLES, self.node_id, payload)
             self.send(msg)
 
     def set_variables(self, chunk_offset, chunk, target_node_id=None):
-        """Send a SET_VARIABLES message.
-        """
-        payload = Message.uint16array_to_bytes([
-            self.get_target_node_id() if target_node_id is None else target_node_id,
-            chunk_offset
-        ] + chunk)
+        """Send a SET_VARIABLES message."""
+        payload = Message.uint16array_to_bytes(
+            [self.get_target_node_id() if target_node_id is None else target_node_id, chunk_offset] + chunk
+        )
         msg = Message(Message.ID_SET_VARIABLES, self.node_id, payload)
         self.send(msg)
 
     def variable_description(self):
-        """Get an array with the description of all variables, with fields "name", "offset" and "size".
-        """
+        """Get an array with the description of all variables, with fields "name", "offset" and "size"."""
         return [
-            {
-                "name": key,
-                "offset": self.remote_node.var_offset[key],
-                "size": self.remote_node.var_size[key]
-            }
+            {"name": key, "offset": self.remote_node.var_offset[key], "size": self.remote_node.var_size[key]}
             for key in self.remote_node.var_offset.keys()
         ]
 
     def get_var(self, name, index=0):
-        """Get the value of a scalar variable from the local copy.
-        """
+        """Get the value of a scalar variable from the local copy."""
         with self.input_lock:
             return self.remote_node.get_var(name, index)
 
     def get_var_array(self, name):
-        """Get the value of an array variable from the local copy.
-        """
+        """Get the value of an array variable from the local copy."""
         with self.input_lock:
             return self.remote_node.get_var_array(name)
 
     def set_var(self, name, val, index=0):
-        """Set the value of a scalar variable in the local copy and send it.
-        """
+        """Set the value of a scalar variable in the local copy and send it."""
         with self.input_lock:
             self.remote_node.set_var(name, val, index)
-        self.set_variables(self.remote_node.var_offset[name] + index,
-                           [val])
+        self.set_variables(self.remote_node.var_offset[name] + index, [val])
 
     def set_var_array(self, name, val):
-        """Set the value of an array variable in the local copy and send it.
-        """
+        """Set the value of an array variable in the local copy and send it."""
         with self.input_lock:
             self.remote_node.set_var_array(name, val)
         self.set_variables(self.remote_node.var_offset[name], val)
@@ -560,6 +518,7 @@ class Thymio:
 
 if __name__ == "__main__":
     import time
+
     with Thymio.serial(refreshing_rate=0.1) as th:
         while True:
             try:
