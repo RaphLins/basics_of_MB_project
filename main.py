@@ -74,8 +74,10 @@ if 'path' not in locals():
 if 'obstacle_map' not in locals():
     obstacle_map = pattern
 
-current_pos = path[0]
-
+if 'thymio_pos' not in locals():
+    current_pos = path[0]
+else:
+    current_pos = thymio_pos
 particles = []
 for i in range(NUMBER_OF_PARTICLES):
     particles.append(Particle(current_pos))
