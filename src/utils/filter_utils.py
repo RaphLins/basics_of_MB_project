@@ -1,15 +1,9 @@
 import math
 import numpy as np
+from myThymio.thymio_constants import *
 from utils import get_pattern
 
-
 PATTERN = get_pattern()
-
-
-WHEELS_SPACING = 50
-SENSOR_FORWARD_OFFSET = 50
-SENSOR_PERP_OFFSET = 10
-
 
 def sample_pattern(x, y):
     x = int(round(x))

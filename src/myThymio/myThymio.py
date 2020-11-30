@@ -5,15 +5,10 @@ import serial
 import time
 import math
 import numpy as np
+from myThymio.thymio_constants import *
 
 GROUND_THRESHOLD = 500
 NUMBER_OF_PARTICLES = 70
-
-THYMIO_SPEED_TO_MMS = 0.36
-MMS_TO_THYMIO_SPEED = 1 / THYMIO_SPEED_TO_MMS
-
-X_SHIFT = 111
-Y_SHIFT = 73
 
 WAYPOINT_REACHED_THRESHOLD_MM = 15
 
@@ -21,10 +16,11 @@ OBSTACLE_DISTANCE_THRESHOLD_MM = 100
 
 AVOIDANCE_DISTANCE_MM = 20
 
-loop_path = [(x[0] + 111, x[1] + 73, x[2]) for x in [(0, 0, 0), (210, 0, 0), (210, 148.5, 0), (0, 148.5, 0)]]
+LOOP_PATH = [(x[0] + 111, x[1] + 73, x[2]) for x in [(0, 0, 0), (210, 0, 0), (210, 148.5, 0), (0, 148.5, 0)]]
 
 class MyThymio(Thymio):
-    def __init__(self, port="COM3", refreshing_rate=0.1, robot_path=loop_path):
+
+    def __init__(self, port="COM3", refreshing_rate=0.1, robot_path=LOOP_PATH):
 
         if port is None:
             port = Thymio.serial_default_port()
@@ -165,7 +161,7 @@ class MyThymio(Thymio):
                     if robot_path:
                         self.target_pos = robot_path.pop(0)
                     else:
-                        if self.robot_path == loop_path:
+                        if self.robot_path == LOOP_PATH:
                             robot_path = self.robot_path.copy()
                         else:
                             if not self.pause:

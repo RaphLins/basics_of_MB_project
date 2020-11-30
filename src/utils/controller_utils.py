@@ -1,8 +1,5 @@
 from math import pi, cos, sin, sqrt, atan2
-
-thymio_speed_to_mms = 0.4
-mms_to_thymio_speed = 1/thymio_speed_to_mms
-WHEELS_SPACING = 50
+from myThymio.thymio_constants import *
 
 
 def normalize_angle(angle):
