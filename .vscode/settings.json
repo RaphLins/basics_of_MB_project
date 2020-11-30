@@ -1,0 +1,12 @@
+{
+    "python.linting.enabled": true,
+    "editor.tokenColorCustomizations": {
+        "comments": "#00e24b"
+    },
+    "python.linting.pylintEnabled": false,
+    "python.linting.flake8Enabled": true,
+    "python.linting.flake8Args": [
+        "--max-line-length=120"
+    ],
+    "python.pythonPath": "/Users/vincentnaayem/Library/Caches/pypoetry/virtualenvs/basics-of-mb-project-Kt-xGXuL-py3.7/bin/python",
+}

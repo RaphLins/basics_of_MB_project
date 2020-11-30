@@ -1,5 +1,4 @@
-src/__pycache__/
 src/.ipynb_checkpoints/Icon_
-.ipynb_checkpoints/project_notebook-checkpoint.ipynb
+.ipynb_checkpoints/*
 .idea/
-__pycache__/
+__pycache__
