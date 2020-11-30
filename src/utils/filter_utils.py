@@ -72,8 +72,8 @@ def draw_particle(particle_pos_list, weights):
     return None
 
 
-def update_particles(
-    current_pos, particle_pos_list, speed_left_m, speed_right_m, ground_left_measure, ground_right_measure, dt
+def particle_filter(
+    particle_pos_list, speed_left_m, speed_right_m, ground_left_measure, ground_right_measure, dt
 ):
     M = len(particle_pos_list)
     NEW_GEN_NUMBER = 50

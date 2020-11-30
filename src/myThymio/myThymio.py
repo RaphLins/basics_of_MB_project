@@ -1,5 +1,5 @@
 from .thymio import Thymio
-from utils import get_distance, update_particles, controller, sensor_2_distance, get_obstacle_points
+from utils import get_distance, particle_filter, controller, sensor_2_distance, get_obstacle_points
 from visuals import Interface
 import serial
 import time
@@ -17,13 +17,14 @@ Y_SHIFT = 73
 
 WAYPOINT_REACHED_THRESHOLD_MM = 15
 
-OBSTACLE_DISTANCE_TRESHOLD_MM = 100
+OBSTACLE_DISTANCE_THRESHOLD_MM = 100
 
 AVOIDANCE_DISTANCE_MM = 20
 
+loop_path = [(x[0] + 111, x[1] + 73, x[2]) for x in [(0, 0, 0), (210, 0, 0), (210, 148.5, 0), (0, 148.5, 0)]]
 
 class MyThymio(Thymio):
-    def __init__(self, port="COM3", refreshing_rate=0.1, robot_path=[]):
+    def __init__(self, port="COM3", refreshing_rate=0.1, robot_path=loop_path):
 
         if port is None:
             port = Thymio.serial_default_port()
@@ -34,7 +35,7 @@ class MyThymio(Thymio):
         self.state = "stopped"
         self.pause = False
 
-        self.set_robot_path(robot_path)
+        self.robot_path = robot_path
 
         self.current_pos, self.target_pos, self.particle_pos_list = None, None, None
 
@@ -42,16 +43,13 @@ class MyThymio(Thymio):
 
         self.last_update = time.time()
         print("Waiting for setup.")
-        time.sleep(5)
+        time.sleep(3)
         self.set_speed(0, 0)
         print("Completed.")
 
-    def set_robot_path(self, robot_path):
-        self.robot_path = [(x[0] + X_SHIFT, x[1] + Y_SHIFT, x[2]) for x in robot_path]
-
     def set_speed(self, left, right):
-        left = round(left)
-        right = round(right)
+        left = int(round(left))
+        right = int(round(right))
         MAX_SPEED = 200
 
         left = min(MAX_SPEED, max(-MAX_SPEED, left))
@@ -96,7 +94,7 @@ class MyThymio(Thymio):
     def pause_continue_robot_path(self, event):
         self.pause = not self.pause
 
-    def check_obstacle(self, obstacle_treshold=OBSTACLE_DISTANCE_TRESHOLD_MM, verbose=False):
+    def check_obstacle(self, obstacle_treshold=OBSTACLE_DISTANCE_THRESHOLD_MM, verbose=False):
         """
         Tests whether one of the proximity sensors saw a wall
         param wall_threshold: threshold starting which it is considered that the sensor saw a wall
@@ -151,8 +149,7 @@ class MyThymio(Thymio):
                 speed_left, speed_right = self.measure_speeds()
                 ground_left_measure, ground_right_measure = self.measure_ground_sensors()
 
-                self.particle_pos_list = update_particles(
-                    self.current_pos,
+                self.particle_pos_list = particle_filter(
                     self.particle_pos_list,
                     speed_left * THYMIO_SPEED_TO_MMS,
                     speed_right * THYMIO_SPEED_TO_MMS,
@@ -164,21 +161,25 @@ class MyThymio(Thymio):
                 self.current_pos = np.mean(self.particle_pos_list, axis=0)
 
                 if get_distance(self.current_pos, self.target_pos) < WAYPOINT_REACHED_THRESHOLD_MM:
-                    print("Target reached.")
+                    # print("Target reached.")
                     if robot_path:
                         self.target_pos = robot_path.pop(0)
                     else:
-                        print("Path completed.")
-                        self.pause = True
+                        if self.robot_path == loop_path:
+                            robot_path = self.robot_path.copy()
+                        else:
+                            if not self.pause:
+                                print("Path completed.")
+                            self.pause = True
 
                 speed_left, speed_right = controller(self.current_pos, self.target_pos)
 
-                speed_left, speed_right = 50, 50
+                # speed_left, speed_right = 50, 50
 
                 if not self.pause:
 
                     sensor_distances = self.check_obstacle()
-                    print(sensor_distances)
+                    # print(sensor_distances)
                     if sensor_distances:
                         print("we are in local avoidance")
                         point1, point2 = get_obstacle_points(sensor_distances)
@@ -190,5 +191,6 @@ class MyThymio(Thymio):
                     self.set_speed(0, 0)
 
         except KeyboardInterrupt:
+            # self.close()
             print("we exit the run loop")
             self.set_speed(0, 0)

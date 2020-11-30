@@ -13,7 +13,7 @@ def get_pattern(pattern_path="images/pattern.png"):
 
 
 def get_distance(point1, point2):
-    """returns the distance between 2 points with format (x, y, tetha)"""
+    """returns the distance between 2 points with format (x, y, theta)"""
     if len(point1) == 3:
         x1, y1, _ = point1
     else:
