@@ -3,7 +3,7 @@ import math
 import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Button
-from utils import get_pattern, get_ground_sensor_pos
+from utils import get_pattern, get_ground_sensor_pos, sample_pattern_ground_sensors
 
 
 class Interface:
@@ -36,16 +36,16 @@ class Interface:
             x, y, theta = particle
             self.map_ax.scatter(x, y, c="m")
 
-    def draw_thymio(self, thymio_pos):
+    def draw_thymio(self, thymio_pos, ground_left_measure, ground_right_measure):
         x, y, theta = thymio_pos
         ground_left, ground_right = get_ground_sensor_pos(thymio_pos)
         length = 30
         self.map_ax.scatter(x, y, c="b")
-        self.map_ax.scatter(ground_left[0], ground_left[1], c="r")
-        self.map_ax.scatter(ground_right[0], ground_right[1], c="r")
+        self.map_ax.scatter(ground_left[0], ground_left[1], c=("c" if ground_left_measure else "b"))
+        self.map_ax.scatter(ground_right[0], ground_right[1], c=("c" if ground_right_measure else "b"))
         self.map_ax.plot((x, x + length * math.cos(theta)), (y, y + length * math.sin(theta)), "b")
 
-    def update_viz(self, current_pos, target_pos, particle_pos_list):
+    def update_viz(self, current_pos, target_pos, particle_pos_list, ground_left_measure, ground_right_measure):
         current_time = time.time()
         if current_time - self.last_update > self.display_rate:
             self.map_ax.clear()
@@ -58,6 +58,6 @@ class Interface:
             x, y, theta = target_pos
             self.map_ax.scatter(x, y, c="g")
             self.draw_particles(particle_pos_list)
-            self.draw_thymio(current_pos)
+            self.draw_thymio(current_pos, ground_left_measure, ground_right_measure)
             plt.draw()
             plt.pause(0.001)

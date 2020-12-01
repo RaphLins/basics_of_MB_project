@@ -3,7 +3,10 @@ import numpy as np
 from myThymio.thymio_constants import *
 from utils import get_pattern
 
+NUMBER_OF_PARTICLES = 70
 PATTERN = get_pattern()
+NEW_GEN_NUMBER = 10
+SIGMA_V = 10
 
 def sample_pattern(x, y):
     x = int(round(x))
@@ -69,26 +72,26 @@ def draw_particle(particle_pos_list, weights):
 def particle_filter(
     particle_pos_list, speed_left_m, speed_right_m, ground_left_measure, ground_right_measure, dt
 ):
-    M = len(particle_pos_list)
-    NEW_GEN_NUMBER = 50
-    sigma = 10
-
-    weights = np.empty([len(particle_pos_list) * NEW_GEN_NUMBER])
+    weights = np.empty([NUMBER_OF_PARTICLES * NEW_GEN_NUMBER])
 
     new_generation = []
     i = 0
     for particle_pos in particle_pos_list:
-        for j in range(NEW_GEN_NUMBER):
-            speed_left = np.random.normal(speed_left_m, sigma)
-            speed_right = np.random.normal(speed_right_m, sigma)
+        for _ in range(NEW_GEN_NUMBER):
+            # create the new generation using the motion uncertainty model
+            speed_left = np.random.normal(speed_left_m, SIGMA_V)
+            speed_right = np.random.normal(speed_right_m, SIGMA_V)
             new_pos = update_pos(particle_pos, speed_left, speed_right, dt)
             new_generation.append(new_pos)
+
+            # estimate the probability of the measurement if the robot was at this position, and use it as weight
             weights[i] = ground_measurement_probability(new_pos, ground_left_measure, ground_right_measure)
+
             i += 1
 
-    # resample
+    # sample the new generation according to the weights
     indices = range(len(new_generation))
-    sample = np.random.choice(indices, size=M, replace=True, p=weights / np.sum(weights))
+    sample = np.random.choice(indices, size=NUMBER_OF_PARTICLES, replace=True, p=weights / np.sum(weights))
 
     new_particles = [new_generation[i] for i in sample]
 

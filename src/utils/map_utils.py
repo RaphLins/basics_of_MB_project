@@ -2,13 +2,14 @@ import cv2
 import math
 
 
-def get_pattern(pattern_path="images/pattern.png"):
+def get_pattern(pattern_path="images/checkboard.png"):
     if not pattern_path:
-        pattern_path = "images/pattern.png"
+        pattern_path = "images/checkboard.png"
 
-    pattern = 1 - cv2.imread(pattern_path)
+    pattern = cv2.bitwise_not(cv2.imread(pattern_path)[::-1,:,:])
     pattern = cv2.cvtColor(pattern, cv2.COLOR_BGR2GRAY)
-    pattern = cv2.resize(pattern, dsize=(420, 297), interpolation=cv2.INTER_CUBIC)
+    # _, pattern = cv2.threshold(pattern, 70, 255, cv2.THRESH_BINARY)
+    pattern = cv2.resize(pattern, dsize=((420-5)*2, (297-5)*2))
     return pattern
 
 
