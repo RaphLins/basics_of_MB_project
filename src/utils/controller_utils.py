@@ -31,8 +31,8 @@ def controller(current_pos, target_pos):
     v = k1 * rho * cos(gamma)**3
     omega = k2 * gamma + k1 * sin(gamma) * cos(gamma) / gamma * (gamma + k3 * delta)
 
-    v = min(50, max(-50, v))
-    omega = min(3, max(-3, omega))
+    v = min(45, max(-45, v))
+    omega = min(2.5, max(-2.5, omega))
 
     speed_left = (v - WHEELS_SPACING * omega / 2)
     speed_right = (v + WHEELS_SPACING * omega / 2)

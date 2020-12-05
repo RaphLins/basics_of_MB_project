@@ -7,16 +7,25 @@ import math
 import numpy as np
 from numpy import sqrt, pi
 from myThymio.thymio_constants import *
+from enum import Enum
+
+class State(Enum):
+    GLOBAL_AVOIDANCE = 1
+    LOCAL_AVOIDANCE = 2
+    LOCAL_TO_GLOBAL = 3
 
 GROUND_THRESHOLD = 500
+
+LOCAL_AVOIDANCE_DISTANCE_THRESHOLD = 100
 
 WAYPOINT_REACHED_THRESHOLD_MM = 25
 
 OBSTACLE_DISTANCE_THRESHOLD_MM = 100
 
-AVOIDANCE_DISTANCE_MM = 20
+AVOIDANCE_DISTANCE_MM = 55
 
 LOOP_PATH = [(x[0] + 2*111, x[1] + 147, x[2]) for x in [(2*210, 0, 0), (2*210, 2*148.5, -pi/2), (0, 2*148.5, pi), (0, 0, pi/2)]]
+LOOP_PATH = [(x[0] + 111, x[1] + 300, x[2]) for x in [(2*280, 0, 0), (0, 0, pi/2)]]
 
 saved_data = []
 
@@ -46,6 +55,10 @@ class MyThymio(Thymio):
         print("Waiting for setup.")
         time.sleep(3)
         self.set_speed(0, 0)
+
+        self.state = State.GLOBAL_AVOIDANCE
+
+        self.distance_since_obstacle = 0
 
         print("Completed.")
 
@@ -90,7 +103,7 @@ class MyThymio(Thymio):
     def measure_ground_sensors(self):
         ground_left_measure = self["prox.ground.delta"][0]
         ground_right_measure = self["prox.ground.delta"][1]
-        print(ground_left_measure, ground_right_measure)
+        # print(ground_left_measure, ground_right_measure)
         # white = 1000, black = 200
         return ground_left_measure > GROUND_THRESHOLD, ground_right_measure > GROUND_THRESHOLD
 
@@ -105,6 +118,10 @@ class MyThymio(Thymio):
         """
         sensor_vals = self['prox.horizontal'][:-2]
         sensors_dist = list(map(sensor_2_distance, sensor_vals, range(5)))
+
+        for i in range(len(sensors_dist)):
+            if sensors_dist[i] > obstacle_treshold:
+                sensors_dist[i] = obstacle_treshold
 
         if any([x < obstacle_treshold for x in sensors_dist]):
             if verbose:
@@ -155,19 +172,19 @@ class MyThymio(Thymio):
                 current_time = time.time()
                 if current_time - self.last_update > self.refreshing_rate:
                     time_diff = current_time - self.last_update
-                    print(time_diff)
+                    # print(time_diff)
                     self.last_update = current_time
 
-                    speed_left, speed_right = self.measure_speeds()
+                    speed_left_measure, speed_right_measure = self.measure_speeds()
                     ground_left_measure, ground_right_measure = self.measure_ground_sensors()
 
                     if self.save_data:
-                        saved_data.append((speed_left, speed_right, ground_left_measure, ground_right_measure, time_diff))
+                        saved_data.append((speed_left_measure, speed_right_measure, ground_left_measure, ground_right_measure, time_diff))
 
                     self.particle_pos_list = particle_filter(
                         self.particle_pos_list,
-                        speed_left * THYMIO_SPEED_TO_MMS,
-                        speed_right * THYMIO_SPEED_TO_MMS,
+                        speed_left_measure * THYMIO_SPEED_TO_MMS,
+                        speed_right_measure * THYMIO_SPEED_TO_MMS,
                         ground_left_measure,
                         ground_right_measure,
                         time_diff,
@@ -189,18 +206,44 @@ class MyThymio(Thymio):
 
                     speed_left, speed_right = controller(self.current_pos, self.target_pos)
 
-                    obstSpeedGain = [7, 5, -1, -5, -7]
+                    sensors_dist = self.check_obstacle(LOCAL_AVOIDANCE_DISTANCE_THRESHOLD)
+                    # print(sensors_dist)
 
-                    for i in range(5):
-                        speed_left += self['prox.horizontal'][i] * obstSpeedGain[i] / 100
-                        speed_right += self['prox.horizontal'][i] * obstSpeedGain[4 - i] / 100
+                    if sensors_dist is not None:
+                        self.state = State.LOCAL_AVOIDANCE
+
+                    if self.state == State.LOCAL_AVOIDANCE:
+
+                        if sensors_dist is None:
+                            self.state = State.LOCAL_TO_GLOBAL
+                            self.distance_since_obstacle = 0
+                        else:
+
+                            obstSpeedGain = [1, 0, -5, -13, -16]
+
+                            for i in range(5):
+                                speed_left += (LOCAL_AVOIDANCE_DISTANCE_THRESHOLD - sensors_dist[i]) * obstSpeedGain[i] / 10
+                                speed_right += (LOCAL_AVOIDANCE_DISTANCE_THRESHOLD - sensors_dist[i]) * obstSpeedGain[4 - i] / 10
+
+
+                    if self.state == State.LOCAL_TO_GLOBAL:
+                        speed_left = 40
+                        speed_right = 40
+
+                        v = (speed_left_measure + speed_right_measure)*THYMIO_SPEED_TO_MMS / 2
+                        self.distance_since_obstacle += v*time_diff
+                        # print(self.distance_since_obstacle)
+
+                        if self.distance_since_obstacle >= AVOIDANCE_DISTANCE_MM:
+                            self.state = State.GLOBAL_AVOIDANCE
+                    # print(self.state)
 
                     if not self.pause:
 
                         sensor_distances = self.check_obstacle()
                         # print(sensor_distances)
                         if sensor_distances:
-                            print("we are in local avoidance")
+                            # print("we are in local avoidance")
                             point1, point2 = get_obstacle_points(sensor_distances)
                             # if np.inf not in point1 and np.inf not in point2:
                             #     speed_left, speed_right = self.avoidance_control(np.array(point1), np.array(point2))

@@ -20,7 +20,7 @@ def find_rectangle(threshold_image, minimum_area, arclen, plot=True):
             if len(approx) == 4:
                 board = approx
 
-    if not board.any():
+    if board == []:
         print("Sheet not found")
         return
     else:
@@ -54,3 +54,14 @@ def remove_black(img, max_black):
     img_no_black = img.copy()
     img_no_black[mask > 0] = (255, 255, 255)
     return img_no_black
+
+def remove_white(img, min_white):
+    black_min = np.array([min_white, min_white, min_white])
+    black_max = np.array([255, 255, 255])
+
+    mask = cv2.inRange(img, black_min, black_max)
+
+    img_no_min_white = img.copy()
+    img_no_min_white[mask > 0] = (0, 0, 0)
+
+    return img_no_min_white

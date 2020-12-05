@@ -1,6 +1,15 @@
 import cv2
 import math
 
+def sample_image(obstacle_map, x, y, outside_value=255):
+    x = int(round(x))
+    y = int(round(y))
+    max_y = obstacle_map.shape[0]
+    max_x = obstacle_map.shape[1]
+    if x >= max_x or x < 0 or y >= max_y or y < 0:
+        return outside_value
+    else:
+        return obstacle_map[y][x]
 
 def get_pattern(pattern_path="images/checkboard.png"):
     if not pattern_path:
