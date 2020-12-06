@@ -31,7 +31,7 @@ saved_data = []
 
 class MyThymio(Thymio):
 
-    def __init__(self, port="COM3", initial_pos=LOOP_PATH[0], refreshing_rate=0.1, robot_path=LOOP_PATH, save_data=False):
+    def __init__(self, port="COM3", initial_pos=LOOP_PATH[0], refreshing_rate=0.1, robot_path=LOOP_PATH, save_data=False, compute_path_func=None):
 
         if port is None:
             port = Thymio.serial_default_port()
@@ -45,6 +45,7 @@ class MyThymio(Thymio):
         self.save_data = save_data
 
         self.robot_path = robot_path
+        self.compute_path_func = compute_path_func
 
         self.initial_pos = initial_pos
         self.current_pos, self.target_pos, self.particle_pos_list = initial_pos, None, None
@@ -153,6 +154,17 @@ class MyThymio(Thymio):
 
         return speed_left, speed_right
 
+    def update_global_path(self, robot_path):
+        if self.compute_path_func:
+            new_path = self.compute_path_func(self.current_pos)
+            if new_path is None:
+                return robot_path
+            else:
+                self.target_pos = new_path.pop(0)
+                return new_path
+        else:
+            return robot_path
+
     def run(self):
 
         robot_path = self.robot_path.copy()
@@ -236,6 +248,7 @@ class MyThymio(Thymio):
 
                         if self.distance_since_obstacle >= AVOIDANCE_DISTANCE_MM:
                             self.state = State.GLOBAL_AVOIDANCE
+                            robot_path = self.update_global_path(robot_path)
                     # print(self.state)
 
                     if not self.pause:
