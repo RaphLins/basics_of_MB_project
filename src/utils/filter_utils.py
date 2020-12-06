@@ -1,6 +1,6 @@
 import math
 import numpy as np
-from thymio_constants import SENSOR_FORWARD_OFFSET, SENSOR_PERP_OFFSET, WHEELS_SPACING
+from myThymio.thymio_constants import SENSOR_FORWARD_OFFSET, SENSOR_PERP_OFFSET, WHEELS_SPACING
 from utils import get_pattern
 
 NUMBER_OF_PARTICLES = 70

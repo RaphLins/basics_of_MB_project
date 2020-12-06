@@ -1,5 +1,5 @@
 from math import pi, cos, sin, sqrt, atan2
-from thymio_constants import WHEELS_SPACING
+from myThymio.thymio_constants import WHEELS_SPACING
 
 
 def normalize_angle(angle):
@@ -28,11 +28,11 @@ def controller(current_pos, target_pos):
     k2 = 0.8  # affects rotational speed
     k3 = 0  # affects how much getting to the final angle matters
 
-    v = k1 * rho * cos(gamma)**3
+    v = k1 * rho * cos(gamma)**5
     omega = k2 * gamma + k1 * sin(gamma) * cos(gamma) / gamma * (gamma + k3 * delta)
 
-    v = min(45, max(-45, v))
-    omega = min(2.5, max(-2.5, omega))
+    v = min(40.0, max(-40.0, v))
+    omega = min(2.0, max(-2.0, omega))
 
     speed_left = (v - WHEELS_SPACING * omega / 2)
     speed_right = (v + WHEELS_SPACING * omega / 2)

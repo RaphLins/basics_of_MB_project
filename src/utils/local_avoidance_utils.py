@@ -1,4 +1,4 @@
-from thymio_constants import LOCAL_AVOIDANCE_DISTANCE_THRESHOLD, THYMIO_SPEED_TO_MMS
+from myThymio.thymio_constants import LOCAL_AVOIDANCE_DISTANCE_THRESHOLD, THYMIO_SPEED_TO_MMS
 
 
 def potential_field(sensors_dist, speed_left, speed_right):

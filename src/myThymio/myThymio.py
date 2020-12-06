@@ -6,14 +6,14 @@ import serial
 import time
 import numpy as np
 from numpy import pi
-from thymio_constants import (THYMIO_SPEED_TO_MMS, MMS_TO_THYMIO_SPEED,
-                              GROUND_THRESHOLD, LOCAL_AVOIDANCE_DISTANCE_THRESHOLD,
-                              WAYPOINT_REACHED_THRESHOLD_MM, OBSTACLE_DISTANCE_THRESHOLD_MM, AVOIDANCE_DISTANCE_MM)
+from .thymio_constants import (THYMIO_SPEED_TO_MMS, MMS_TO_THYMIO_SPEED,
+                               GROUND_THRESHOLD, LOCAL_AVOIDANCE_DISTANCE_THRESHOLD,
+                               WAYPOINT_REACHED_THRESHOLD_MM, OBSTACLE_DISTANCE_THRESHOLD_MM, AVOIDANCE_DISTANCE_MM)
 from enum import Enum
 
 LOOP_PATH = [(x[0] + 2*111, x[1] + 147, x[2]) for x in [(2*210, 0, 0), (2*210, 2*148.5, -pi/2),
                                                         (0, 2*148.5, pi), (0, 0, pi/2)]]
-LOOP_PATH = [(x[0] + 111, x[1] + 300, x[2]) for x in [(2*280, 0, 0), (0, 0, pi/2)]]
+# LOOP_PATH = [(x[0] + 111, x[1] + 300, x[2]) for x in [(2*280, 0, 0), (0, 0, pi/2)]]
 
 
 class State(Enum):
@@ -26,9 +26,8 @@ saved_data = []
 
 
 class MyThymio(Thymio):
-
     def __init__(self, port="COM3", initial_pos=LOOP_PATH[0], refreshing_rate=0.1,
-                 robot_path=LOOP_PATH, save_data=False):
+                 robot_path=LOOP_PATH, save_data=False, compute_path_func=None):
 
         if port is None:
             port = Thymio.serial_default_port()
@@ -40,7 +39,9 @@ class MyThymio(Thymio):
         self.handshake()
         self.pause = False
         self.save_data = save_data
+
         self.initial_robot_path = robot_path
+        self.compute_path_func = compute_path_func
 
         self.initial_pos = initial_pos  # Encore utile?
         self.current_pos, self.target_pos, self.particle_pos_list = initial_pos, None, None
@@ -139,6 +140,17 @@ class MyThymio(Thymio):
                 self.pause = True
         return robot_path
 
+    def update_global_path(self, robot_path):
+        if self.compute_path_func:
+            new_path = self.compute_path_func(self.current_pos)
+            if new_path is None:
+                return robot_path
+            else:
+                self.target_pos = new_path.pop(0)
+                return new_path
+        else:
+            return robot_path
+
     def run(self):
 
         robot_path = self.initial_robot_path.copy()
@@ -178,12 +190,10 @@ class MyThymio(Thymio):
 
                     speed_left, speed_right = controller(self.current_pos, self.target_pos)
 
-                    if self.state == State.GLOBAL_AVOIDANCE:
-                        sensors_dist = self.check_obstacle(LOCAL_AVOIDANCE_DISTANCE_THRESHOLD)
-                        # print(sensors_dist)
+                    sensors_dist = self.check_obstacle(LOCAL_AVOIDANCE_DISTANCE_THRESHOLD)
 
-                        if sensors_dist is not None:
-                            self.state = State.LOCAL_AVOIDANCE
+                    if sensors_dist is not None:
+                        self.state = State.LOCAL_AVOIDANCE
 
                     if self.state == State.LOCAL_AVOIDANCE:
 
@@ -201,6 +211,7 @@ class MyThymio(Thymio):
 
                         if self.distance_since_obstacle >= AVOIDANCE_DISTANCE_MM:
                             self.state = State.GLOBAL_AVOIDANCE
+                            robot_path = self.update_global_path(robot_path)
                         # print(self.distance_since_obstacle)
 
                     # print(self.state)
@@ -210,8 +221,7 @@ class MyThymio(Thymio):
                     else:
                         self.set_speed(0, 0)
 
-                self.interface.update_viz(self.current_pos, self.target_pos, self.particle_pos_list,
-                                          ground_left_measure, ground_right_measure)
+                self.interface.update_viz(self.current_pos, self.target_pos, self.particle_pos_list)
 
         except KeyboardInterrupt:
             # self.close()

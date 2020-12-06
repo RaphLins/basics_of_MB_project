@@ -7,7 +7,7 @@ def find_rectangle(threshold_image, minimum_area, arclen, plot=True):
     # Detecting shapes in image by selecting region with same colors or intensity.
     contours, _ = cv2.findContours(threshold_image, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
-    board = []
+    board = np.array([])
 
     # Searching through every region selected to find the required polygon.
     for cnt in contours:
@@ -21,8 +21,7 @@ def find_rectangle(threshold_image, minimum_area, arclen, plot=True):
             if len(approx) == 4:
                 board = approx
 
-    if board == []:
-        print("Sheet not found")
+    if not board.any():
         return
     else:
         if plot:
@@ -36,7 +35,7 @@ def find_rectangle(threshold_image, minimum_area, arclen, plot=True):
     top_left_idx = None
     for i in range(len(board)):
         vertice1 = board[i][0]
-        if vertice1[0] < threshold_image.shape[0] and vertice1[1] < threshold_image.shape[1]:
+        if vertice1[0] < threshold_image.shape[0]/2 and vertice1[1] < threshold_image.shape[1]/2:
             top_left_idx = i
             break
     new_board = []
