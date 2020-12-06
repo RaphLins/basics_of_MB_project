@@ -1,5 +1,5 @@
 from math import pi, cos, sin, sqrt, atan2
-from myThymio.thymio_constants import *
+from thymio_constants import WHEELS_SPACING
 
 
 def normalize_angle(angle):

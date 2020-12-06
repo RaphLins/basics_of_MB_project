@@ -1,12 +1,13 @@
 import math
 import numpy as np
-from myThymio.thymio_constants import *
+from thymio_constants import SENSOR_FORWARD_OFFSET, SENSOR_PERP_OFFSET, WHEELS_SPACING
 from utils import get_pattern
 
 NUMBER_OF_PARTICLES = 70
 PATTERN = get_pattern()
 NEW_GEN_NUMBER = 10
 SIGMA_V = 10
+
 
 def sample_pattern(x, y):
     x = int(round(x))
