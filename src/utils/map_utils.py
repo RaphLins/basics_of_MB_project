@@ -1,6 +1,7 @@
 import cv2
 import math
 
+
 def sample_image(obstacle_map, x, y, outside_value=255):
     x = int(round(x))
     y = int(round(y))
@@ -11,11 +12,12 @@ def sample_image(obstacle_map, x, y, outside_value=255):
     else:
         return obstacle_map[y][x]
 
+
 def get_pattern(pattern_path="images/checkboard.png"):
     if not pattern_path:
         pattern_path = "images/checkboard.png"
 
-    pattern = cv2.bitwise_not(cv2.imread(pattern_path)[::-1,:,:])
+    pattern = cv2.bitwise_not(cv2.imread(pattern_path)[::-1, :, :])
     pattern = cv2.cvtColor(pattern, cv2.COLOR_BGR2GRAY)
     # _, pattern = cv2.threshold(pattern, 70, 255, cv2.THRESH_BINARY)
     pattern = cv2.resize(pattern, dsize=((420-5)*2, (297-5)*2))

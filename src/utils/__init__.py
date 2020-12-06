@@ -3,3 +3,4 @@ from .filter_utils import get_ground_sensor_pos, particle_filter, PATTERN, sampl
 from .controller_utils import controller
 from .sensor_utils import sensor_2_distance, get_obstacle_points
 from .vision_utils import find_rectangle, remove_black, remove_white
+from .local_avoidance_utils import potential_field, update_dist_obst

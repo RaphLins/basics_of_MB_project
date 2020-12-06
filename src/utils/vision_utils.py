@@ -2,14 +2,15 @@ import matplotlib.pyplot as plt
 import cv2
 import numpy as np
 
+
 def find_rectangle(threshold_image, minimum_area, arclen, plot=True):
     # Detecting shapes in image by selecting region with same colors or intensity.
-    contours,_=cv2.findContours(threshold_image, cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
+    contours, _ = cv2.findContours(threshold_image, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
     board = []
 
     # Searching through every region selected to find the required polygon.
-    for cnt in contours :
+    for cnt in contours:
         area = cv2.contourArea(cnt)
 
         # Shortlisting the regions based on there area.
@@ -25,10 +26,10 @@ def find_rectangle(threshold_image, minimum_area, arclen, plot=True):
         return
     else:
         if plot:
-            n= len(board)
+            n = len(board)
             for i in range(n):
                 vertice1 = board[i][0]
-                vertice2 = board[(i+1)%n][0]
+                vertice2 = board[(i+1) % n][0]
                 plt.scatter(vertice1[0], vertice1[1], c='r')
                 plt.plot((vertice1[0], vertice2[0]), (vertice1[1], vertice2[1]), 'r')
 
@@ -45,6 +46,7 @@ def find_rectangle(threshold_image, minimum_area, arclen, plot=True):
 
     return new_board
 
+
 def remove_black(img, max_black):
     black_min = np.array([0, 0, 0])
     black_max = np.array([max_black, max_black, max_black])
@@ -54,6 +56,7 @@ def remove_black(img, max_black):
     img_no_black = img.copy()
     img_no_black[mask > 0] = (255, 255, 255)
     return img_no_black
+
 
 def remove_white(img, min_white):
     black_min = np.array([min_white, min_white, min_white])

@@ -3,7 +3,7 @@ import math
 import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Button
-from utils import get_pattern, get_ground_sensor_pos, sample_pattern_ground_sensors
+from utils import get_pattern, get_ground_sensor_pos
 
 
 class Interface:
